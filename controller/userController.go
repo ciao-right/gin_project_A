@@ -6,7 +6,6 @@ import (
 	"gin_project/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"log"
 	"net/http"
 )
 
@@ -46,7 +45,6 @@ func Register(ctx *gin.Context) {
 		})
 		return
 	}
-	log.Println(userName, password, tel)
 	//返回
 	newUser := model.User{
 		Name:     userName,
@@ -59,6 +57,33 @@ func Register(ctx *gin.Context) {
 		"code": 200,
 		"data": 1,
 	})
+}
+
+func Login(ctx *gin.Context) {
+	//获取参数
+	userName := ctx.PostForm("userName")
+	password := ctx.PostForm("password")
+	//判断有没有输入参数
+	if utils.IsEmptyString(userName) || utils.IsEmptyString(password) {
+		ctx.JSON(http.StatusOK, gin.H{
+			"msg":  "请输入用户名或者密码",
+			"code": 201,
+			"data": 0,
+		})
+		return
+	}
+	//判断是否输入正确
+	var user model.User
+	common.GetDb().Where("name = ?", userName).First(&user)
+	if user.ID != 0 {
+		if user.Password == password {
+			ctx.JSON(http.StatusOK, gin.H{
+				"code": "200",
+				"msg":  "success",
+				"data": 1,
+			})
+		}
+	}
 }
 
 func isTelExist(db *gorm.DB, tel string) bool {
